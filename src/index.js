@@ -145,7 +145,7 @@ function run({ origin, transit, settings }) {
           if (dataRadix.horoscope._celestialBodies[bodies[i]].Sign)
             sign = signs.indexOf(
               dataRadix.horoscope._celestialBodies[bodies[i]].Sign.key
-            );
+            ) + 1;
 
           const theta = calculateTheta(key, cartesian_00);
 
@@ -198,7 +198,7 @@ function run({ origin, transit, settings }) {
                 console.log("aspect:", key, "with", p, t);
                 channel.sendControlChange(
                   8 + bodies.indexOf(p),
-                  aspects.indexOf(t)
+                  aspects.indexOf(t) + 1
                 );
               }
             }
@@ -209,6 +209,10 @@ function run({ origin, transit, settings }) {
 
             for (const no_aspect of no_aspects) {
               console.log("no aspect:", key, "with:", no_aspect);
+              channel.sendControlChange(
+                  8 + bodies.indexOf(p),
+                  0
+              );
             }
           }
         }
