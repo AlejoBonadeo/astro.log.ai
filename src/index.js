@@ -153,13 +153,12 @@ function run({ origin, transit, settings }) {
 
           // AZM
           const theta_channel = Math.floor(theta / 128);
+          const one_third_theta = Math.floor(theta / 3);
           const theta_remainder = theta % 128;
 
-          for (let j = 1; j < theta_channel; j++)
-            channel.sendControlChange(j, 127);
-          channel.sendControlChange(theta_channel, theta_remainder);
-          for (let j = theta_channel + 1; j < 4; j++)
-            channel.sendControlChange(j, 0);
+          channel.sendControlChange(1, one_third_theta);
+          channel.sendControlChange(2, one_third_theta);
+          channel.sendControlChange(3, one_third_theta + theta_reminder);
 
           // ALT
           if (alt < 0) {
