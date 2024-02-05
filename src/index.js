@@ -158,7 +158,7 @@ function run({ origin, transit, settings }) {
 
           channel.sendControlChange(1, one_third_theta);
           channel.sendControlChange(2, one_third_theta);
-          channel.sendControlChange(3, one_third_theta + theta_reminder);
+          channel.sendControlChange(3, one_third_theta + theta_remainder);
 
           // ALT
           if (alt < 0) {
