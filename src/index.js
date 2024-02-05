@@ -154,7 +154,7 @@ function run({ origin, transit, settings }) {
           // AZM
           const theta_channel = Math.floor(theta / 128);
           const one_third_theta = Math.floor(theta / 3);
-          const theta_remainder = theta % 128;
+          const theta_remainder = theta % 3;
 
           channel.sendControlChange(1, one_third_theta);
           channel.sendControlChange(2, one_third_theta);
