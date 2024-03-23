@@ -1,4 +1,23 @@
-import { disableControls, displayErrorPage, displayLoader, displayLoadingButton, geolocate, getCurrentLocation, getCurrentOrigin, getCurrentTime, getSearchParams, hasNumericProps, parseDate, parsePlace, parseTime, triggerEvent, withErrorHandling } from "./utils";
+import {
+  disableControls,
+  displayErrorPage,
+  displayLoader,
+  displayLoadingButton,
+  geolocate,
+  getCurrentLocation,
+  getCurrentOrigin,
+  getCurrentTime,
+  getSearchParams,
+  hasNumericProps,
+  parseDate,
+  parsePlace,
+  parseTime,
+  triggerEvent,
+  withErrorHandling,
+} from "./utils";
+import { initializeApp } from "firebase/app";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { v4 as uuid } from "uuid";
 
 const DEFAULT_SETTINGS = {
   houseSystem: "placidus",
@@ -10,12 +29,37 @@ const DEFAULT_SETTINGS = {
   aspectsToCusps: false,
 };
 
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC6FVNOSu9fZWV5urIJ94N4Umw0v84DUaM",
+  authDomain: "astro-log-ai.firebaseapp.com",
+  projectId: "astro-log-ai",
+  storageBucket: "astro-log-ai.appspot.com",
+  messagingSenderId: "273088480957",
+  appId: "1:273088480957:web:c5f68eec0374a643afd9d4",
+};
+
+/**
+ * Uploads user data to Firestore.
+ * @param {string} username - The username of the user.
+ * @param {string} birth_date - The birth date of the user.
+ * @returns {Promise<void>} A Promise that resolves when the data is successfully uploaded to Firestore.
+ */
+const uploadToFirestore = async (username, birth_date) => {
+  const app = initializeApp(FIREBASE_CONFIG);
+  const db = getFirestore(app);
+
+  await setDoc(doc(db, "astro_logs", uuid), {
+    username,
+    birth_date,
+  });
+};
+
 let settingsEl, settingsButtonEl, onChange;
 
 /**
  * Returns initialization settings/options with defaults from
  * an entries array and other sources
- * 
+ *
  * @param {array} entries string-keyed property pairs
  * @returns {Promise} Promise of options with such format: {
  *  {object} origin = with keys: ['year','month','date','hour','minute','latitude','longitude'],
@@ -31,22 +75,37 @@ let settingsEl, settingsButtonEl, onChange;
  *    }
  *  }
  */
- export async function getParameters(entries) {
-  let origin = {}, transit = {};
+export async function getParameters(entries) {
+  let origin = {},
+    transit = {};
   const settings = { ...DEFAULT_SETTINGS };
-  for (const [k,v] of entries) {
+  for (const [k, v] of entries) {
     switch (k) {
-      case 'date': Object.assign(origin, parseDate(v)); break;
-      case 'time': Object.assign(origin, parseTime(v)); break;
-      case 'place': Object.assign(origin, await parsePlace(v)); break;
-      case 'tdate': Object.assign(transit, parseDate(v)); break;
-      case 'ttime': Object.assign(transit, parseTime(v)); break;
-      case 'tplace': Object.assign(transit, await parsePlace(v)); break;
+      case "date":
+        Object.assign(origin, parseDate(v));
+        break;
+      case "time":
+        Object.assign(origin, parseTime(v));
+        break;
+      case "place":
+        Object.assign(origin, await parsePlace(v));
+        break;
+      case "tdate":
+        Object.assign(transit, parseDate(v));
+        break;
+      case "ttime":
+        Object.assign(transit, parseTime(v));
+        break;
+      case "tplace":
+        Object.assign(transit, await parsePlace(v));
+        break;
       default: {
         if (Object.keys(DEFAULT_SETTINGS).includes(k)) {
           settings[k] = v;
-        } else if (k === 'fbclid') {
-          const filteredEntries = Array.from(entries).filter(kv => kv[0] !== 'fbclid');
+        } else if (k === "fbclid") {
+          const filteredEntries = Array.from(entries).filter(
+            (kv) => kv[0] !== "fbclid"
+          );
           location.assign(`?${new URLSearchParams(filteredEntries)}`);
           return {};
         } else {
@@ -58,27 +117,27 @@ let settingsEl, settingsButtonEl, onChange;
   if (Object.keys(origin).length === 0) {
     origin = await getCurrentOrigin();
   } else {
-    if (!hasNumericProps(origin, ['latitude','longitude'])) {
+    if (!hasNumericProps(origin, ["latitude", "longitude"])) {
       Object.assign(origin, await getCurrentLocation());
     }
-    if (!hasNumericProps(origin, ['year','month','date'])) {
+    if (!hasNumericProps(origin, ["year", "month", "date"])) {
       Object.assign(origin, getCurrentTime());
     }
-    if (!hasNumericProps(origin, ['hour','minute'])) {
+    if (!hasNumericProps(origin, ["hour", "minute"])) {
       Object.assign(origin, { hour: 12, minute: 0 });
     }
   }
-  if (settings.type === 'transit') {
+  if (settings.type === "transit") {
     if (Object.keys(transit) === 0) {
       transit = await getCurrentOrigin();
     } else {
-      if (!hasNumericProps(transit, ['latitude','longitude'])) {
+      if (!hasNumericProps(transit, ["latitude", "longitude"])) {
         Object.assign(transit, await getCurrentLocation());
       }
-      if (!hasNumericProps(transit, ['year','month','date'])) {
+      if (!hasNumericProps(transit, ["year", "month", "date"])) {
         Object.assign(transit, getCurrentTime());
       }
-      if (!hasNumericProps(transit, ['hour','minute'])) {
+      if (!hasNumericProps(transit, ["hour", "minute"])) {
         Object.assign(transit, { hour: 12, minute: 0 });
       }
     }
@@ -88,15 +147,15 @@ let settingsEl, settingsButtonEl, onChange;
 
 function fillForm() {
   const params = getSearchParams();
-  settingsEl.querySelectorAll('[name]').forEach(el => {
-    if (el.checked) triggerEvent(el, 'change');
+  settingsEl.querySelectorAll("[name]").forEach((el) => {
+    if (el.checked) triggerEvent(el, "change");
     if (!(el.name in params)) return;
-    if (el.type === 'radio') {
+    if (el.type === "radio") {
       if (el.value === params[el.name]) {
         el.checked = true;
-        triggerEvent(el, 'change');
+        triggerEvent(el, "change");
       }
-    } else if (el.type === 'checkbox') {
+    } else if (el.type === "checkbox") {
       el.checked = !!params[el.name];
     } else {
       el.value = params[el.name];
@@ -106,7 +165,7 @@ function fillForm() {
 
 function formDataToParams(formData) {
   const paramsObj = {};
-  for (const [k,v] of formData.entries()) {
+  for (const [k, v] of formData.entries()) {
     if (!v || v === DEFAULT_SETTINGS[k]) continue;
     paramsObj[k] = v;
   }
@@ -121,32 +180,35 @@ function onGeolocate(e) {
   const button = e.currentTarget;
   e.preventDefault();
   displayLoadingButton(button, true);
-  const placeInput = button.parentElement.parentElement.querySelector('input.place');
-  geolocate().then(({ latitude, longitude }) => {
-    placeInput.value = [latitude, longitude].join(',');
-    displayLoadingButton(button, false);
-  }).catch(err => {
-    alert(err.message);
-    console.error(err);
-    displayLoadingButton(button, false);
-  });
+  const placeInput =
+    button.parentElement.parentElement.querySelector("input.place");
+  geolocate()
+    .then(({ latitude, longitude }) => {
+      placeInput.value = [latitude, longitude].join(",");
+      displayLoadingButton(button, false);
+    })
+    .catch((err) => {
+      alert(err.message);
+      console.error(err);
+      displayLoadingButton(button, false);
+    });
 }
 
 function onOpen(e) {
   fillForm();
-  settingsEl.classList.remove('hidden');
+  settingsEl.classList.remove("hidden");
   e.currentTarget.disabled = true;
 }
 
 function onClose() {
-  settingsEl.classList.add('hidden');
+  settingsEl.classList.add("hidden");
   settingsButtonEl.disabled = false;
 }
 
 function onReset() {
   setTimeout(() => {
-    settingsEl.querySelectorAll('[name]').forEach(el => {
-      if (el.checked) triggerEvent(el, 'change');
+    settingsEl.querySelectorAll("[name]").forEach((el) => {
+      if (el.checked) triggerEvent(el, "change");
     });
   }, 0);
 }
@@ -157,14 +219,14 @@ function onModeChange(e) {
       settingsEl.querySelector('[name="houseSystem"]').parentElement,
       settingsEl.querySelector('[name="aspectsToCusps"]').parentElement,
     ],
-    e.target.value === 'cosmogram'
+    e.target.value === "cosmogram"
   );
 }
 
 function onTypeChange(e) {
   disableControls(
-    settingsEl.querySelector('section.transit'),
-    e.target.value !== 'transit'
+    settingsEl.querySelector("section.transit"),
+    e.target.value !== "transit"
   );
 }
 
@@ -175,7 +237,7 @@ const onSubmit = withErrorHandling(async (e) => {
   const paramsObj = formDataToParams(formData);
   const paramsEntries = Object.entries(paramsObj);
   const searchParams = new URLSearchParams(paramsObj);
-  history.pushState(paramsEntries, '', `?${searchParams}`);
+  history.pushState(paramsEntries, "", `?${searchParams}`);
   onChange(await getParameters(paramsEntries));
   onClose();
 });
@@ -187,14 +249,20 @@ const onPopState = withErrorHandling(async (e) => {
 
 export function init(changeHandler) {
   onChange = changeHandler;
-  settingsEl = document.getElementById('settings');
-  settingsButtonEl = document.querySelector('button.settings');
-  settingsButtonEl.addEventListener('click', onOpen);
-  settingsEl.querySelector('form').addEventListener('submit', onSubmit);
-  settingsEl.querySelector('button.close').addEventListener('click', onClose);
-  settingsEl.querySelector('button.reset').addEventListener('click', onReset);
-  settingsEl.querySelectorAll('button.geolocate').forEach(_ => _.addEventListener('click', onGeolocate));
-  settingsEl.querySelectorAll('[name="mode"]').forEach(_ => _.addEventListener('change', onModeChange));
-  settingsEl.querySelectorAll('[name="type"]').forEach(_ => _.addEventListener('change', onTypeChange));
-  window.addEventListener('popstate', onPopState);
+  settingsEl = document.getElementById("settings");
+  settingsButtonEl = document.querySelector("button.settings");
+  settingsButtonEl.addEventListener("click", onOpen);
+  settingsEl.querySelector("form").addEventListener("submit", onSubmit);
+  settingsEl.querySelector("button.close").addEventListener("click", onClose);
+  settingsEl.querySelector("button.reset").addEventListener("click", onReset);
+  settingsEl
+    .querySelectorAll("button.geolocate")
+    .forEach((_) => _.addEventListener("click", onGeolocate));
+  settingsEl
+    .querySelectorAll('[name="mode"]')
+    .forEach((_) => _.addEventListener("change", onModeChange));
+  settingsEl
+    .querySelectorAll('[name="type"]')
+    .forEach((_) => _.addEventListener("change", onTypeChange));
+  window.addEventListener("popstate", onPopState);
 }
