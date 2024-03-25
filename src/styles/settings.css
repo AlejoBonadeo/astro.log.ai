@@ -1,19 +1,12 @@
 #settings {
-  position: fixed;
   margin: auto;
-  background: var(--primary-bg-color);
-  border-width: 2px;
-  border: 2px solid var(--lighter-fg-color);
-  border-radius: .5em;
   max-width: 95vw;
   z-index: 10;
 }
 
 #settings form {
   display: flex;
-  flex-direction: column;
   gap: .5em;
-  padding: 2em 2em 1em 2em;
 }
 
 #settings section {
@@ -97,6 +90,26 @@
   right: 1vmin;
   font-size: 2em;
   line-height: .8em;
+}
+
+#settings .name-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+}
+
+#settings .name-select > div {
+  border: 1px solid var(--primary-fg-color);
+  border-radius: .25rem;
+  font-size: 1rem;
+  padding: 5px 10px;
+}
+
+#settings .name-select > .name-select__selected {
+  background-color: #32cd32;
+  color: #000;
+
 }
 
 @keyframes blink {

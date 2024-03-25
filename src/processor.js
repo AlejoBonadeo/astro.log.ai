@@ -38,36 +38,41 @@ import { debugLog, isCosmogram } from "./utils";
 
 export function calculate(origin, settings) {
   const DEFAULT_CUSPS = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
-  
+
   const horoscope = new Horoscope({
     origin: new Origin(origin),
     houseSystem: settings.houseSystem ?? "placidus",
     zodiac: settings.zodiac ?? "tropical",
-    aspectPoints: ['bodies'/*, 'points', 'angles'*/],
-    aspectWithPoints: ['bodies'/*, 'points', 'angles'*/],
+    aspectPoints: ["bodies" /*, 'points', 'angles'*/],
+    aspectWithPoints: ["bodies" /*, 'points', 'angles'*/],
     aspectTypes: ["major"],
     customOrbs: {},
-    language: 'en'
+    language: "en",
   });
 
   const planets = Object.assign(
     {},
-    ...horoscope.CelestialBodies.all.concat(horoscope.CelestialPoints.all)
-        .filter(body => !['sirius','southnode'].includes(body.key))
-        .map((body) => {
-          const key = body.key === 'northnode' ?
-            'NNode' :
-            body.key.charAt(0).toUpperCase() + body.key.slice(1);
-          const speed = horoscope.Ephemeris[body.key]?.motion?.oneSecondMotionAmount;
-          const value = [body.ChartPosition.Ecliptic.DecimalDegrees];
-          if (speed !== undefined) value.push(speed);
-          return { [key]: value };
-        })
+    ...horoscope.CelestialBodies.all
+      .concat(horoscope.CelestialPoints.all)
+      .filter((body) => !["sirius", "southnode"].includes(body.key))
+      .map((body) => {
+        const key =
+          body.key === "northnode"
+            ? "NNode"
+            : body.key.charAt(0).toUpperCase() + body.key.slice(1);
+        const speed =
+          horoscope.Ephemeris[body.key]?.motion?.oneSecondMotionAmount;
+        const value = [body.ChartPosition.Ecliptic.DecimalDegrees];
+        if (speed !== undefined) value.push(speed);
+        return { [key]: value };
+      })
   );
 
-  const cusps = isCosmogram(settings) ? DEFAULT_CUSPS : horoscope.Houses.map((cusp) => {
-    return cusp.ChartPosition.StartPosition.Ecliptic.DecimalDegrees;
-  });
+  const cusps = isCosmogram(settings)
+    ? DEFAULT_CUSPS
+    : horoscope.Houses.map((cusp) => {
+        return cusp.ChartPosition.StartPosition.Ecliptic.DecimalDegrees;
+      });
 
   debugLog("horoscope.Aspects: %o", horoscope.Aspects);
 

@@ -45,16 +45,20 @@ const FIREBASE_CONFIG = {
  * @returns {Promise<void>} A Promise that resolves when the data is successfully uploaded to Firestore.
  */
 const uploadToFirestore = async (username, birth_date) => {
-  const app = initializeApp(FIREBASE_CONFIG);
-  const db = getFirestore(app);
+  try {
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db = getFirestore(app);
 
-  await setDoc(doc(db, "astro_logs", uuid), {
-    username,
-    birth_date,
-  });
+    await setDoc(doc(db, "astro_logs", uuid), {
+      username,
+      birth_date,
+    });
+  } catch (error) {
+    alert("Error uploading to database");
+  }
 };
 
-let settingsEl, settingsButtonEl, onChange;
+let settingsEl, settingsButtonEl, onChange, usernameEl;
 
 /**
  * Returns initialization settings/options with defaults from
@@ -98,6 +102,13 @@ export async function getParameters(entries) {
         break;
       case "tplace":
         Object.assign(transit, await parsePlace(v));
+        break;
+      case "initials":
+        username = v.split(",");
+        username.forEach(
+          (char, i) => (fields[i].innerText = String.fromCharCode(char))
+        );
+
         break;
       default: {
         if (Object.keys(DEFAULT_SETTINGS).includes(k)) {
@@ -237,10 +248,64 @@ const onSubmit = withErrorHandling(async (e) => {
   const paramsObj = formDataToParams(formData);
   const paramsEntries = Object.entries(paramsObj);
   const searchParams = new URLSearchParams(paramsObj);
-  history.pushState(paramsEntries, "", `?${searchParams}`);
+  history.pushState(paramsEntries, "", `?${searchParams}&initials=${username}`);
+  // await uploadToFirestore(username.map((u) => String.fromCharCode(u)).join(), `${params.date} ${params.time}:00.000`);
   onChange(await getParameters(paramsEntries));
-  onClose();
 });
+
+let username = [45, 45, 45];
+let selectedUsernameField, fields;
+
+const startUsername = () => {
+  selectedUsernameField = 0;
+  fields[selectedUsernameField].classList.add("name-select__selected");
+  document.addEventListener("keydown", arrowKeyHandler);
+  cleanUp();
+};
+
+const arrowKeyHandler = (event) => {
+  if (event.key === "ArrowUp") {
+    const char = username[selectedUsernameField];
+    let newChar;
+    if (char === 128) {
+      newChar = 32;
+    } else {
+      newChar = char + 1;
+    }
+    username[selectedUsernameField] = newChar;
+    fields[selectedUsernameField].textContent = String.fromCharCode(newChar);
+  } else if (event.key === "ArrowDown") {
+    const char = username[selectedUsernameField];
+    let newChar;
+    if (char === 32) {
+      newChar = 128;
+    } else {
+      newChar = char - 1;
+    }
+    username[selectedUsernameField] = newChar;
+    fields[selectedUsernameField].textContent = String.fromCharCode(newChar);
+  } else if (event.key === "ArrowLeft") {
+    if (selectedUsernameField > 0) {
+      fields[selectedUsernameField--].classList.remove("name-select__selected");
+      fields[selectedUsernameField].classList.add("name-select__selected");
+    }
+  } else if (event.key === "ArrowRight") {
+    if (selectedUsernameField < 2) {
+      fields[selectedUsernameField++].classList.remove("name-select__selected");
+      fields[selectedUsernameField].classList.add("name-select__selected");
+    }
+  }
+};
+
+const cleanUp = () => {
+  const inputs = document.querySelectorAll("#settings input");
+  inputs.forEach((input) => {
+    input.addEventListener("focus", () => {
+      document.removeEventListener("keydown", arrowKeyHandler);
+      fields[selectedUsernameField].classList.remove("name-select__selected");
+    });
+  });
+};
 
 const onPopState = withErrorHandling(async (e) => {
   displayLoader(true);
@@ -251,10 +316,13 @@ export function init(changeHandler) {
   onChange = changeHandler;
   settingsEl = document.getElementById("settings");
   settingsButtonEl = document.querySelector("button.settings");
+  usernameEl = document.querySelector(".name-select");
+  fields = document.querySelectorAll(".name-select > div");
   settingsButtonEl.addEventListener("click", onOpen);
   settingsEl.querySelector("form").addEventListener("submit", onSubmit);
   settingsEl.querySelector("button.close").addEventListener("click", onClose);
   settingsEl.querySelector("button.reset").addEventListener("click", onReset);
+  usernameEl.addEventListener("click", startUsername);
   settingsEl
     .querySelectorAll("button.geolocate")
     .forEach((_) => _.addEventListener("click", onGeolocate));
@@ -264,5 +332,6 @@ export function init(changeHandler) {
   settingsEl
     .querySelectorAll('[name="type"]')
     .forEach((_) => _.addEventListener("change", onTypeChange));
+
   window.addEventListener("popstate", onPopState);
 }

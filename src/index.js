@@ -123,10 +123,27 @@ function run({ origin, transit, settings }) {
         y: window.innerHeight / 2,
       };
 
+      const initials = new URLSearchParams(window.location.search).get(
+        "initials"
+      );
+
       // for each output on WebMidi
       for (let p = 0; p < WebMidi.outputs.length; p++) {
         var output = WebMidi.outputs[p];
         console.log("channel", channel);
+
+        const firstChannel = output.channels[1];
+
+        if (initials) {
+          let initialsArr = initials.split(",");
+          firstChannel.sendControlChange(19, initialsArr[0]);
+          firstChannel.sendControlChange(20, initialsArr[1]);
+          firstChannel.sendControlChange(21, initialsArr[2]);
+        }
+        firstChannel.sendControlChange(22, origin.date);
+        firstChannel.sendControlChange(23, origin.month + 1);
+        firstChannel.sendControlChange(24, +`${origin.year}`.slice(0, 2));
+        firstChannel.sendControlChange(25, +`${origin.year}`.slice(2, 4));
 
         // iterate throiugh all bodies
         for (let i = 0; i < bodies.length; i++) {
@@ -143,9 +160,10 @@ function run({ origin, transit, settings }) {
 
           var sign = 13;
           if (dataRadix.horoscope._celestialBodies[bodies[i]].Sign)
-            sign = signs.indexOf(
-              dataRadix.horoscope._celestialBodies[bodies[i]].Sign.key
-            ) + 1;
+            sign =
+              signs.indexOf(
+                dataRadix.horoscope._celestialBodies[bodies[i]].Sign.key
+              ) + 1;
 
           const theta = calculateTheta(key, cartesian_00);
 
@@ -208,10 +226,7 @@ function run({ origin, transit, settings }) {
 
             for (const no_aspect of no_aspects) {
               console.log("no aspect:", key, "with:", no_aspect);
-              channel.sendControlChange(
-                  8 + bodies.indexOf(p),
-                  0
-              );
+              channel.sendControlChange(8 + bodies.indexOf(p), 0);
             }
           }
         }

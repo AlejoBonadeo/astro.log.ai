@@ -1,6 +1,6 @@
 :root {
-  --primary-fg-color: #ffffff;
-  --lighter-fg-color: #90A4AE;
+  --primary-fg-color: #32cd32;
+  --lighter-fg-color: #32cd32;
   --primary-bg-color: #000000;
   accent-color: var(--primary-fg-color);
 }
@@ -15,7 +15,8 @@
 body {
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* justify-content: center; */
+  flex-direction: column;
   height: 100vh;
   margin: 0;
   padding: 0;
