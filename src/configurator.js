@@ -44,16 +44,18 @@ const FIREBASE_CONFIG = {
  * @param {string} birth_date - The birth date of the user.
  * @returns {Promise<void>} A Promise that resolves when the data is successfully uploaded to Firestore.
  */
-const uploadToFirestore = async (username, birth_date) => {
+const uploadToFirestore = async (username, birth_date, place) => {
   try {
     const app = initializeApp(FIREBASE_CONFIG);
     const db = getFirestore(app);
 
-    await setDoc(doc(db, "astro_logs", uuid), {
+    await setDoc(doc(db, "astro_logs", uuid()), {
       username,
       birth_date,
+      place,
     });
   } catch (error) {
+    console.log(error);
     alert("Error uploading to database");
   }
 };
@@ -104,10 +106,7 @@ export async function getParameters(entries) {
         Object.assign(transit, await parsePlace(v));
         break;
       case "initials":
-        username = v.split(",");
-        username.forEach(
-          (char, i) => (fields[i].innerText = String.fromCharCode(char))
-        );
+        usernameEl.value = v;
 
         break;
       default: {
@@ -248,20 +247,17 @@ const onSubmit = withErrorHandling(async (e) => {
   const paramsObj = formDataToParams(formData);
   const paramsEntries = Object.entries(paramsObj);
   const searchParams = new URLSearchParams(paramsObj);
-  history.pushState(paramsEntries, "", `?${searchParams}&initials=${username}`);
-  // await uploadToFirestore(username.map((u) => String.fromCharCode(u)).join(), `${params.date} ${params.time}:00.000`);
+  history.pushState(paramsEntries, "", `?${searchParams}`);
+  await uploadToFirestore(
+    paramsObj.initials,
+    `${paramsObj.date} ${paramsObj.time}:00.000`,
+    paramsObj.place
+  );
   onChange(await getParameters(paramsEntries));
 });
 
 let username = [45, 45, 45];
 let selectedUsernameField, fields;
-
-const startUsername = () => {
-  selectedUsernameField = 0;
-  fields[selectedUsernameField].classList.add("name-select__selected");
-  document.addEventListener("keydown", arrowKeyHandler);
-  cleanUp();
-};
 
 const arrowKeyHandler = (event) => {
   if (event.key === "ArrowUp") {
@@ -297,14 +293,12 @@ const arrowKeyHandler = (event) => {
   }
 };
 
-const cleanUp = () => {
-  const inputs = document.querySelectorAll("#settings input");
-  inputs.forEach((input) => {
-    input.addEventListener("focus", () => {
-      document.removeEventListener("keydown", arrowKeyHandler);
-      fields[selectedUsernameField].classList.remove("name-select__selected");
-    });
-  });
+const handleChange = (e) => {
+  e.target.value = e.target.value
+    .split("")
+    .filter((c) => c.charCodeAt(0) >= 32 && c.charCodeAt(0) <= 128)
+    .join("")
+    .slice(0, 3);
 };
 
 const onPopState = withErrorHandling(async (e) => {
@@ -319,10 +313,10 @@ export function init(changeHandler) {
   usernameEl = document.querySelector(".name-select");
   fields = document.querySelectorAll(".name-select > div");
   settingsButtonEl.addEventListener("click", onOpen);
+  usernameEl.addEventListener("input", handleChange);
   settingsEl.querySelector("form").addEventListener("submit", onSubmit);
   settingsEl.querySelector("button.close").addEventListener("click", onClose);
   settingsEl.querySelector("button.reset").addEventListener("click", onReset);
-  usernameEl.addEventListener("click", startUsername);
   settingsEl
     .querySelectorAll("button.geolocate")
     .forEach((_) => _.addEventListener("click", onGeolocate));

@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- <script src="node_modules/osc/dist/osc-browser.js"></script> -->
-    <title>Quick Astro Charts</title>
+    <title>Astro Log IO</title>
   </head>
   <body>
     <div id="spinner-overlay">
@@ -289,11 +289,12 @@
           </fieldset>
           <fieldset>
             <legend>Initials</legend>
-            <div class="name-select">
-              <div>-</div>
-              <div>-</div>
-              <div>-</div>
-            </div>
+            <input
+              class="name-select"
+              type="text"
+              name="initials"
+              placeholder="- - -"
+            />
           </fieldset>
         </section>
         <section class="transit hidden">
