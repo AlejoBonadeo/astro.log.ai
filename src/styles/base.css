@@ -6,7 +6,7 @@
 }
 
 :disabled,
-:disabled ~ span {
+:disabled~span {
   background-color: inherit;
   color: inherit;
   opacity: .5;
@@ -34,7 +34,8 @@ a:hover {
   color: var(--primary-fg-color);
 }
 
-ul, p {
+ul,
+p {
   margin: 0;
 }
 
@@ -61,7 +62,8 @@ fieldset {
   justify-content: center;
 }
 
-legend, input::placeholder {
+legend,
+input::placeholder {
   color: var(--lighter-fg-color);
 }
 
@@ -70,7 +72,8 @@ label {
   user-select: none;
 }
 
-select, input {
+select,
+input {
   font-size: inherit;
   color: inherit;
   background-color: inherit;
@@ -107,4 +110,19 @@ input[type="time"] {
 
 .hidden {
   display: none !important;
+}
+
+.logo {
+  position: absolute;
+  right: 10px;
+  font-weight: 100;
+}
+
+@media only screen and (max-width: 800px) {
+  .logo {
+    right: unset;
+    top: 50vh;
+
+  }
+
 }
