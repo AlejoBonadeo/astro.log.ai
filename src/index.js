@@ -135,10 +135,9 @@ function run({ origin, transit, settings }) {
         const firstChannel = output.channels[1];
 
         if (initials) {
-          let initialsArr = initials.split(",");
-          firstChannel.sendControlChange(19, initialsArr.charCodeAt(0));
-          firstChannel.sendControlChange(20, initialsArr.charCodeAt(1));
-          firstChannel.sendControlChange(21, initialsArr.charCodeAt(2));
+          firstChannel.sendControlChange(19, initials.charCodeAt(0));
+          firstChannel.sendControlChange(20, initials.charCodeAt(1));
+          firstChannel.sendControlChange(21, initials.charCodeAt(2));
         }
         firstChannel.sendControlChange(22, origin.date);
         firstChannel.sendControlChange(23, origin.month + 1);
