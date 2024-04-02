@@ -136,9 +136,9 @@ function run({ origin, transit, settings }) {
 
         if (initials) {
           let initialsArr = initials.split(",");
-          firstChannel.sendControlChange(19, initialsArr[0]);
-          firstChannel.sendControlChange(20, initialsArr[1]);
-          firstChannel.sendControlChange(21, initialsArr[2]);
+          firstChannel.sendControlChange(19, initialsArr.charCodeAt(0));
+          firstChannel.sendControlChange(20, initialsArr.charCodeAt(1));
+          firstChannel.sendControlChange(21, initialsArr.charCodeAt(2));
         }
         firstChannel.sendControlChange(22, origin.date);
         firstChannel.sendControlChange(23, origin.month + 1);
